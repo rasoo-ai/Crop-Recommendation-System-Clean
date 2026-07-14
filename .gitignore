@@ -1,4 +1,6 @@
-output/
+output/*
+!output/crop_prediction_model.pkl
+!output/Crop_Normalized.xlsx
 data/
 .venv/
 __pycache__/
