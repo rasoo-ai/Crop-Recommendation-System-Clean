@@ -1,0 +1,10 @@
+output/
+data/
+.venv/
+__pycache__/
+*.tif
+*.csv
+*.parquet
+*.geojson
+*.geojsonl
+*.xlsx
