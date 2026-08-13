@@ -1,12 +1,12 @@
 # Crop Recommendation System Using Machine Learning
 
 ## Live Demo
-
+[Open the Live Application](https://smart-crop-recommendation-ai.streamlit.app)
 ## Project Overview
 
 ## Features
 
-### Individual Crop Recommendation
+### Individual Crop Recommendation)
 
 ### State-wise Recommendations
 
