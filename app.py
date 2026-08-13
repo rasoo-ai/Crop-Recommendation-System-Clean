@@ -2,9 +2,9 @@ import streamlit as st
 import pandas as pd
 import joblib
 
-# --------------------------------------------------
-# Page Configuration
-# --------------------------------------------------
+# ==========================================================
+# PAGE CONFIGURATION
+# ==========================================================
 
 st.set_page_config(
     page_title="Crop Recommendation System",
@@ -12,9 +12,9 @@ st.set_page_config(
     layout="wide"
 )
 
-# --------------------------------------------------
-# Load Model and Dataset
-# --------------------------------------------------
+# ==========================================================
+# LOAD MODEL AND DATASET
+# ==========================================================
 
 @st.cache_resource
 def load_model():
@@ -29,25 +29,25 @@ def load_dataset():
 model = load_model()
 df = load_dataset()
 
-# --------------------------------------------------
-# Prepare Dropdown Values
-# --------------------------------------------------
+# ==========================================================
+# PREPARE DROPDOWN VALUES
+# ==========================================================
 
 soil_types = sorted(
-    df["Soil_Type"].dropna().unique()
+    df["Soil_Type"].dropna().astype(str).unique()
 )
 
 states = sorted(
-    df["State_Name"].dropna().unique()
+    df["State_Name"].dropna().astype(str).unique()
 )
 
 zones = sorted(
-    df["Agro_Climatic Zone"].dropna().unique()
+    df["Agro_Climatic Zone"].dropna().astype(str).unique()
 )
 
-# --------------------------------------------------
-# Title
-# --------------------------------------------------
+# ==========================================================
+# TITLE
+# ==========================================================
 
 st.title("🌾 Crop Recommendation System")
 
@@ -58,18 +58,22 @@ st.markdown(
 
 st.markdown("---")
 
-# ==================================================
+# ==========================================================
 # SECTION 1 - INDIVIDUAL CROP PREDICTION
-# ==================================================
+# ==========================================================
 
 st.header("🌱 Individual Crop Recommendation")
 
-st.markdown(
+st.write(
     "Enter soil, weather and geographical parameters "
     "to predict the most suitable crop."
 )
 
 col1, col2 = st.columns(2)
+
+# ----------------------------------------------------------
+# LEFT COLUMN
+# ----------------------------------------------------------
 
 with col1:
 
@@ -90,89 +94,109 @@ with col1:
 
     ph = st.number_input(
         "pH Value",
-        value=6.8
+        value=6.8,
+        step=0.1
     )
 
     nitrogen = st.number_input(
         "Nitrogen (N)",
-        value=120.0
+        value=120.0,
+        step=1.0
     )
 
     phosphorus = st.number_input(
         "Phosphorus (P)",
-        value=40.0
+        value=40.0,
+        step=1.0
     )
 
     potassium = st.number_input(
         "Potassium (K)",
-        value=180.0
+        value=180.0,
+        step=1.0
     )
 
     ec = st.number_input(
         "Electrical Conductivity",
-        value=0.4
+        value=0.4,
+        step=0.1
     )
+
+# ----------------------------------------------------------
+# RIGHT COLUMN
+# ----------------------------------------------------------
 
 with col2:
 
     organic = st.number_input(
         "Organic Carbon (%)",
-        value=0.8
+        value=0.8,
+        step=0.1
     )
 
     moisture = st.number_input(
         "Soil Moisture (%)",
-        value=30.0
+        value=30.0,
+        step=1.0
     )
 
     zinc = st.number_input(
         "Zinc (%)",
-        value=0.6
+        value=0.6,
+        step=0.1
     )
 
     iron = st.number_input(
         "Iron (%)",
-        value=3.2
+        value=3.2,
+        step=0.1
     )
 
     manganese = st.number_input(
         "Manganese (%)",
-        value=1.1
+        value=1.1,
+        step=0.1
     )
 
     copper = st.number_input(
         "Copper (%)",
-        value=0.3
+        value=0.3,
+        step=0.1
     )
 
     boron = st.number_input(
         "Boron (%)",
-        value=0.4
+        value=0.4,
+        step=0.1
     )
 
     sulphur = st.number_input(
         "Sulphur (%)",
-        value=12.0
+        value=12.0,
+        step=1.0
     )
 
     rainfall = st.number_input(
         "Rainfall (cm)",
-        value=120.0
+        value=120.0,
+        step=1.0
     )
 
     temperature = st.number_input(
         "Temperature (°C)",
-        value=28.0
+        value=28.0,
+        step=0.1
     )
 
     humidity = st.number_input(
         "Humidity (%)",
-        value=75.0
+        value=75.0,
+        step=1.0
     )
 
-# --------------------------------------------------
-# Individual Prediction
-# --------------------------------------------------
+# ==========================================================
+# INDIVIDUAL PREDICTION
+# ==========================================================
 
 st.markdown("---")
 
@@ -204,7 +228,9 @@ if st.button(
     }])
 
     try:
+
         prediction = model.predict(sample)[0]
+
         probabilities = model.predict_proba(sample)[0]
 
         st.success(
@@ -215,34 +241,41 @@ if st.button(
 
         top3 = probabilities.argsort()[-3:][::-1]
 
-        for rank, i in enumerate(top3, start=1):
+        for rank, index in enumerate(top3, start=1):
 
-            crop = model.classes_[i]
-            score = probabilities[i] * 100
+            crop = model.classes_[index]
 
-            st.write(f"### {rank}. {crop}")
+            confidence = probabilities[index] * 100
+
+            st.write(
+                f"### {rank}. {crop}"
+            )
 
             st.progress(
-                float(probabilities[i])
+                float(probabilities[index])
             )
 
             st.write(
-                f"Confidence: **{score:.2f}%**"
+                f"Confidence: **{confidence:.2f}%**"
             )
 
-    except Exception as e:
-        st.error("Prediction could not be completed.")
-        st.exception(e)
+    except Exception as error:
 
-# ==================================================
-# SECTION 2 - STATE-WISE RECOMMENDATION
-# ==================================================
+        st.error(
+            "Unable to generate the crop prediction."
+        )
+
+        st.exception(error)
+
+# ==========================================================
+# SECTION 2 - STATE-WISE CROP RECOMMENDATIONS
+# ==========================================================
 
 st.markdown("---")
 
 st.header("🇮🇳 State-wise Crop Recommendations")
 
-st.markdown(
+st.write(
     "Generate representative crop recommendations for "
     "all states available in the dataset."
 )
@@ -253,8 +286,12 @@ if st.button(
 ):
 
     with st.spinner(
-        "Generating recommendations for all states..."
+        "Calculating state-wise recommendations..."
     ):
+
+        # --------------------------------------------------
+        # NUMERIC FEATURES
+        # --------------------------------------------------
 
         numeric_cols = [
             "pH_Value",
@@ -277,106 +314,239 @@ if st.button(
 
         results = []
 
+        # --------------------------------------------------
+        # PROCESS EVERY STATE
+        # --------------------------------------------------
+
         for current_state in states:
 
             state_df = df[
-                df["State_Name"] == current_state
-            ]
+                df["State_Name"].astype(str)
+                == current_state
+            ].copy()
 
             if state_df.empty:
                 continue
 
-            averages = state_df[numeric_cols].mean()
+            # ------------------------------------------------
+            # SAFE NUMERIC CONVERSION
+            # ------------------------------------------------
+
+            state_numeric = state_df[
+                numeric_cols
+            ].apply(
+                pd.to_numeric,
+                errors="coerce"
+            )
+
+            # ------------------------------------------------
+            # CALCULATE SAFE AVERAGES
+            # ------------------------------------------------
+
+            averages = state_numeric.mean(
+                skipna=True
+            )
+
+            # ------------------------------------------------
+            # CHECK MISSING NUMERIC VALUES
+            # ------------------------------------------------
+
+            if averages.isna().all():
+                continue
+
+            # Fill any missing averages from the
+            # overall dataset averages
+            overall_numeric = df[
+                numeric_cols
+            ].apply(
+                pd.to_numeric,
+                errors="coerce"
+            )
+
+            overall_averages = overall_numeric.mean(
+                skipna=True
+            )
+
+            averages = averages.fillna(
+                overall_averages
+            )
+
+            # ------------------------------------------------
+            # MOST COMMON SOIL TYPE
+            # ------------------------------------------------
 
             soil_mode = (
                 state_df["Soil_Type"]
                 .dropna()
+                .astype(str)
                 .mode()
             )
 
-            representative_soil = (
-                soil_mode.iloc[0]
-                if not soil_mode.empty
-                else soil_types[0]
-            )
+            if not soil_mode.empty:
+                representative_soil = soil_mode.iloc[0]
+            else:
+                representative_soil = soil_types[0]
+
+            # ------------------------------------------------
+            # MOST COMMON AGRO-CLIMATIC ZONE
+            # ------------------------------------------------
 
             zone_mode = (
                 state_df["Agro_Climatic Zone"]
                 .dropna()
+                .astype(str)
                 .mode()
             )
 
-            representative_zone = (
-                zone_mode.iloc[0]
-                if not zone_mode.empty
-                else zones[0]
-            )
+            if not zone_mode.empty:
+                representative_zone = zone_mode.iloc[0]
+            else:
+                representative_zone = zones[0]
+
+            # ------------------------------------------------
+            # CREATE REPRESENTATIVE SAMPLE
+            # ------------------------------------------------
 
             state_sample = pd.DataFrame([{
                 "Soil_Type": representative_soil,
-                "pH_Value": averages["pH_Value"],
-                "Nitrogen_Value (N)": averages["Nitrogen_Value (N)"],
-                "Phosphorus_Value (P)": averages["Phosphorus_Value (P)"],
-                "Potassium_Value (K)": averages["Potassium_Value (K)"],
-                "Electrical_Conductivity (EC)": averages[
-                    "Electrical_Conductivity (EC)"
-                ],
-                "Organic_Carbon (%)": averages[
-                    "Organic_Carbon (%)"
-                ],
-                "Soil_Moisture (%)": averages[
-                    "Soil_Moisture (%)"
-                ],
-                "Zinc (%)": averages["Zinc (%)"],
-                "Iron (%)": averages["Iron (%)"],
-                "Manganese (%)": averages["Manganese (%)"],
-                "Copper (%)": averages["Copper (%)"],
-                "Boron (%)": averages["Boron (%)"],
-                "Sulphur (%)": averages["Sulphur (%)"],
-                "Rainfall_cm": averages["Rainfall_cm"],
-                "temperature_celsius": averages[
-                    "temperature_celsius"
-                ],
-                "humidity_percentage": averages[
-                    "humidity_percentage"
-                ],
+
+                "pH_Value":
+                    float(averages["pH_Value"]),
+
+                "Nitrogen_Value (N)":
+                    float(
+                        averages["Nitrogen_Value (N)"]
+                    ),
+
+                "Phosphorus_Value (P)":
+                    float(
+                        averages["Phosphorus_Value (P)"]
+                    ),
+
+                "Potassium_Value (K)":
+                    float(
+                        averages["Potassium_Value (K)"]
+                    ),
+
+                "Electrical_Conductivity (EC)":
+                    float(
+                        averages[
+                            "Electrical_Conductivity (EC)"
+                        ]
+                    ),
+
+                "Organic_Carbon (%)":
+                    float(
+                        averages["Organic_Carbon (%)"]
+                    ),
+
+                "Soil_Moisture (%)":
+                    float(
+                        averages["Soil_Moisture (%)"]
+                    ),
+
+                "Zinc (%)":
+                    float(
+                        averages["Zinc (%)"]
+                    ),
+
+                "Iron (%)":
+                    float(
+                        averages["Iron (%)"]
+                    ),
+
+                "Manganese (%)":
+                    float(
+                        averages["Manganese (%)"]
+                    ),
+
+                "Copper (%)":
+                    float(
+                        averages["Copper (%)"]
+                    ),
+
+                "Boron (%)":
+                    float(
+                        averages["Boron (%)"]
+                    ),
+
+                "Sulphur (%)":
+                    float(
+                        averages["Sulphur (%)"]
+                    ),
+
+                "Rainfall_cm":
+                    float(
+                        averages["Rainfall_cm"]
+                    ),
+
+                "temperature_celsius":
+                    float(
+                        averages["temperature_celsius"]
+                    ),
+
+                "humidity_percentage":
+                    float(
+                        averages[
+                            "humidity_percentage"
+                        ]
+                    ),
+
                 "State_Name": current_state,
-                "Agro_Climatic Zone": representative_zone
+
+                "Agro_Climatic Zone":
+                    representative_zone
             }])
 
+            # ------------------------------------------------
+            # PREDICT STATE CROP
+            # ------------------------------------------------
+
             try:
-                state_prediction = model.predict(
+
+                prediction = model.predict(
                     state_sample
                 )[0]
 
-                state_probabilities = model.predict_proba(
+                probabilities = model.predict_proba(
                     state_sample
                 )[0]
 
-                top3_state = (
-                    state_probabilities
-                    .argsort()[-3:][::-1]
-                )
+                # Top 3 predictions
+                top3 = probabilities.argsort()[-3:][::-1]
 
                 results.append({
-                    "State": current_state,
-                    "Soil Type": representative_soil,
-                    "Agro Climatic Zone": representative_zone,
-                    "Recommended Crop": state_prediction,
-                    "Confidence (%)": round(
-                        state_probabilities[top3_state[0]] * 100,
-                        2
-                    ),
-                    "Second Choice": model.classes_[
-                        top3_state[1]
-                    ],
-                    "Third Choice": model.classes_[
-                        top3_state[2]
-                    ]
+                    "State":
+                        current_state,
+
+                    "Soil Type":
+                        representative_soil,
+
+                    "Agro Climatic Zone":
+                        representative_zone,
+
+                    "Recommended Crop":
+                        model.classes_[top3[0]],
+
+                    "Confidence (%)":
+                        round(
+                            probabilities[top3[0]] * 100,
+                            2
+                        ),
+
+                    "Second Choice":
+                        model.classes_[top3[1]],
+
+                    "Third Choice":
+                        model.classes_[top3[2]]
                 })
 
             except Exception:
                 continue
+
+        # ==================================================
+        # DISPLAY RESULTS
+        # ==================================================
 
         state_results = pd.DataFrame(results)
 
@@ -393,29 +563,43 @@ if st.button(
                 f"for {len(state_results)} states."
             )
 
+            # ------------------------------------------------
+            # TABLE
+            # ------------------------------------------------
+
             st.dataframe(
                 state_results,
                 use_container_width=True,
                 hide_index=True
             )
 
+            # ------------------------------------------------
+            # SUMMARY METRICS
+            # ------------------------------------------------
+
             st.markdown("## 📊 Recommendation Summary")
 
-            summary_col1, summary_col2 = st.columns(2)
+            metric1, metric2 = st.columns(2)
 
-            with summary_col1:
+            with metric1:
+
                 st.metric(
                     "States Analyzed",
                     len(state_results)
                 )
 
-            with summary_col2:
+            with metric2:
+
                 st.metric(
                     "Different Recommended Crops",
                     state_results[
                         "Recommended Crop"
                     ].nunique()
                 )
+
+            # ------------------------------------------------
+            # CROP DISTRIBUTION
+            # ------------------------------------------------
 
             st.markdown(
                 "### 🌾 Recommended Crop Distribution"
@@ -428,7 +612,13 @@ if st.button(
                 .value_counts()
             )
 
-            st.bar_chart(crop_counts)
+            st.bar_chart(
+                crop_counts
+            )
+
+            # ------------------------------------------------
+            # DOWNLOAD RESULTS
+            # ------------------------------------------------
 
             csv_data = state_results.to_csv(
                 index=False
@@ -442,9 +632,9 @@ if st.button(
                 use_container_width=True
             )
 
-# ==================================================
+# ==========================================================
 # FOOTER
-# ==================================================
+# ==========================================================
 
 st.markdown("---")
 
