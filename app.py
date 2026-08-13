@@ -14,6 +14,12 @@ st.set_page_config(
 # --------------------------------------------------
 # Load Model and Dataset
 # --------------------------------------------------
+import os
+
+st.write("Current directory:", os.getcwd())
+st.write("Output exists:", os.path.exists("output"))
+st.write("Excel exists:", os.path.exists("output/Crop_Normalized.xlsx"))
+st.write("Model exists:", os.path.exists("output/crop_prediction_model.pkl"))
 model = joblib.load("output/crop_prediction_model.pkl")
 df = pd.read_excel("output/Crop_Normalized.xlsx")
 
