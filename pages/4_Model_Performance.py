@@ -1,14 +1,15 @@
-import streamlit as st
+import json
 import pandas as pd
 import joblib
+import streamlit as st
+import matplotlib.pyplot as plt
 
 from sklearn.metrics import (
-    accuracy_score,
     classification_report,
     confusion_matrix,
 )
 from sklearn.model_selection import train_test_split
-import matplotlib.pyplot as plt
+
 
 st.set_page_config(
     page_title="Model Performance",
@@ -18,14 +19,14 @@ st.set_page_config(
 
 st.title("📊 Model Performance")
 
-st.write(
-    "Evaluation of the Random Forest crop recommendation model "
-    "using the project dataset."
-)
+# --------------------------------------------------
+# Load data, model, and canonical metrics
+# --------------------------------------------------
 
-# --------------------------------------------------
-# Load model and data
-# --------------------------------------------------
+@st.cache_data
+def load_data():
+    return pd.read_excel("output/Crop_Normalized.xlsx")
+
 
 @st.cache_resource
 def load_model():
@@ -33,12 +34,18 @@ def load_model():
 
 
 @st.cache_data
-def load_data():
-    return pd.read_excel("output/Crop_Normalized.xlsx")
+def load_metrics():
+    with open(
+        "output/model_metrics.json",
+        "r",
+        encoding="utf-8",
+    ) as f:
+        return json.load(f)
 
 
-model = load_model()
 df = load_data()
+model = load_model()
+metrics = load_metrics()
 
 # --------------------------------------------------
 # Features
@@ -88,13 +95,19 @@ numeric_cols = [
 target = "Crop"
 
 # --------------------------------------------------
-# Clean data
+# Prepare evaluation data exactly like 17_evaluate_model.py
 # --------------------------------------------------
 
 for col in numeric_cols:
-    df[col] = pd.to_numeric(df[col], errors="coerce")
+    df[col] = pd.to_numeric(
+        df[col],
+        errors="coerce",
+    )
 
-df = df.dropna()
+df = df.dropna(
+    subset=features + [target]
+)
+
 df = df.drop_duplicates()
 
 crop_mapping = {
@@ -104,15 +117,24 @@ crop_mapping = {
     "Pulses (Arhar)": "Pulses",
 }
 
-df[target] = df[target].replace(crop_mapping)
+df[target] = df[target].replace(
+    crop_mapping
+)
 
 counts = df[target].value_counts()
-valid_classes = counts[counts >= 20].index
-df = df[df[target].isin(valid_classes)]
 
-# --------------------------------------------------
-# Same random test split used by training
-# --------------------------------------------------
+valid_classes = counts[
+    counts >= 20
+].index
+
+df = df[
+    df[target].isin(valid_classes)
+].copy()
+
+df = df.sample(
+    frac=1,
+    random_state=42,
+).reset_index(drop=True)
 
 X = df[features]
 y = df[target]
@@ -127,12 +149,6 @@ _, X_test, _, y_test = train_test_split(
 
 pred = model.predict(X_test)
 
-# --------------------------------------------------
-# Metrics
-# --------------------------------------------------
-
-accuracy = accuracy_score(y_test, pred)
-
 report = classification_report(
     y_test,
     pred,
@@ -140,11 +156,8 @@ report = classification_report(
     zero_division=0,
 )
 
-macro_f1 = report["macro avg"]["f1-score"]
-weighted_f1 = report["weighted avg"]["f1-score"]
-
 # --------------------------------------------------
-# Summary metrics
+# Overall metrics
 # --------------------------------------------------
 
 st.subheader("Overall Performance")
@@ -154,35 +167,45 @@ c1, c2, c3 = st.columns(3)
 with c1:
     st.metric(
         "Test Accuracy",
-        f"{accuracy * 100:.2f}%"
+        f"{metrics['test_accuracy'] * 100:.2f}%"
     )
 
 with c2:
     st.metric(
         "Macro F1",
-        f"{macro_f1:.2f}"
+        f"{metrics['macro_f1']:.2f}"
     )
 
 with c3:
     st.metric(
         "Weighted F1",
-        f"{weighted_f1:.2f}"
+        f"{metrics['weighted_f1']:.2f}"
     )
 
 # --------------------------------------------------
-# Per-crop metrics
+# Additional information
+# --------------------------------------------------
+
+st.caption(
+    f"Test records: {metrics['test_records']} | "
+    f"Wrong predictions: {metrics['wrong_predictions']} | "
+    f"Error rate: {metrics['error_rate'] * 100:.2f}%"
+)
+
+# --------------------------------------------------
+# Per-crop performance
 # --------------------------------------------------
 
 st.markdown("---")
 st.subheader("Per-Crop Performance")
 
-crop_rows = []
+rows = []
 
 for crop in sorted(valid_classes):
 
     if crop in report:
 
-        crop_rows.append({
+        rows.append({
             "Crop": crop,
             "Precision": round(
                 report[crop]["precision"], 3
@@ -198,7 +221,7 @@ for crop in sorted(valid_classes):
             ),
         })
 
-crop_df = pd.DataFrame(crop_rows)
+crop_df = pd.DataFrame(rows)
 
 st.dataframe(
     crop_df,
@@ -220,7 +243,7 @@ labels = sorted(
 cm = confusion_matrix(
     y_test,
     pred,
-    labels=labels
+    labels=labels,
 )
 
 fig, ax = plt.subplots(
@@ -232,7 +255,12 @@ image = ax.imshow(cm)
 ax.set_xticks(range(len(labels)))
 ax.set_yticks(range(len(labels)))
 
-ax.set_xticklabels(labels, rotation=45, ha="right")
+ax.set_xticklabels(
+    labels,
+    rotation=45,
+    ha="right",
+)
+
 ax.set_yticklabels(labels)
 
 ax.set_xlabel("Predicted Crop")
@@ -255,26 +283,20 @@ plt.tight_layout()
 st.pyplot(fig)
 
 # --------------------------------------------------
-# Explanation
+# Interpretation
 # --------------------------------------------------
 
 st.markdown("---")
 st.subheader("How to Interpret the Results")
 
 st.write(
-    f"The model achieved a test accuracy of "
-    f"{accuracy * 100:.2f}% on the current held-out test split."
-)
-
-st.write(
-    f"The macro F1-score is {macro_f1:.2f}, which gives "
-    "equal importance to each crop class and is therefore "
-    "useful when the dataset contains imbalanced crop counts."
+    f"The current model has a test accuracy of "
+    f"{metrics['test_accuracy'] * 100:.2f}% "
+    f"and a macro F1-score of "
+    f"{metrics['macro_f1']:.2f}."
 )
 
 st.info(
-    "The displayed accuracy is based on the project's random "
-    "train/test evaluation. Geographic holdout evaluation should "
-    "be reported separately when measuring performance on genuinely "
-    "unseen tehsils."
+    "Accuracy is calculated on a held-out test split. "
+    "Macro F1 is useful because the crop classes are imbalanced."
 )

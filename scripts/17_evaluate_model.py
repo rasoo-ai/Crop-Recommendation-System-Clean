@@ -1,3 +1,4 @@
+import json
 import pandas as pd
 import joblib
 
@@ -8,16 +9,23 @@ from sklearn.metrics import (
 )
 from sklearn.model_selection import train_test_split
 
-# --------------------------------------------------
-# Load
-# --------------------------------------------------
 
-df = pd.read_excel("output/Crop_Normalized.xlsx")
-model = joblib.load("output/crop_prediction_model.pkl")
+# ==========================================================
+# LOAD DATASET AND MODEL
+# ==========================================================
 
-# --------------------------------------------------
-# Features
-# --------------------------------------------------
+df = pd.read_excel(
+    "output/Crop_Normalized.xlsx"
+)
+
+model = joblib.load(
+    "output/crop_prediction_model.pkl"
+)
+
+
+# ==========================================================
+# FEATURES
+# ==========================================================
 
 features = [
     "Soil_Type",
@@ -41,8 +49,6 @@ features = [
     "Agro_Climatic Zone",
 ]
 
-target = "Crop"
-
 numeric_cols = [
     "pH_Value",
     "Nitrogen_Value (N)",
@@ -62,14 +68,23 @@ numeric_cols = [
     "humidity_percentage",
 ]
 
-# --------------------------------------------------
-# Clean data
-# --------------------------------------------------
+target = "Crop"
+
+
+# ==========================================================
+# DATA CLEANING
+# ==========================================================
 
 for col in numeric_cols:
-    df[col] = pd.to_numeric(df[col], errors="coerce")
+    df[col] = pd.to_numeric(
+        df[col],
+        errors="coerce"
+    )
 
-df = df.dropna()
+df = df.dropna(
+    subset=features + [target]
+)
+
 df = df.drop_duplicates()
 
 crop_mapping = {
@@ -79,25 +94,34 @@ crop_mapping = {
     "Pulses (Arhar)": "Pulses",
 }
 
-df[target] = df[target].replace(crop_mapping)
+df[target] = df[target].replace(
+    crop_mapping
+)
 
 counts = df[target].value_counts()
-valid_classes = counts[counts >= 20].index
-df = df[df[target].isin(valid_classes)]
+
+valid_classes = counts[
+    counts >= 20
+].index
+
+df = df[
+    df[target].isin(valid_classes)
+].copy()
 
 df = df.sample(
     frac=1,
     random_state=42
 ).reset_index(drop=True)
 
-# --------------------------------------------------
-# Recreate same test split
-# --------------------------------------------------
+
+# ==========================================================
+# TRAIN / TEST SPLIT
+# ==========================================================
 
 X = df[features]
 y = df[target]
 
-_, X_test, _, y_test = train_test_split(
+X_train, X_test, y_train, y_test = train_test_split(
     X,
     y,
     test_size=0.20,
@@ -105,41 +129,52 @@ _, X_test, _, y_test = train_test_split(
     stratify=y,
 )
 
-# --------------------------------------------------
-# Predict
-# --------------------------------------------------
 
-pred = model.predict(X_test)
+# ==========================================================
+# PREDICTIONS
+# ==========================================================
+
+pred = model.predict(
+    X_test
+)
+
+
+# ==========================================================
+# ACCURACY
+# ==========================================================
 
 accuracy = accuracy_score(
     y_test,
     pred
 )
 
-print("=" * 70)
-print("MODEL EVALUATION")
-print("=" * 70)
 
-print(
-    f"\nTest Accuracy: {accuracy * 100:.2f}%"
+# ==========================================================
+# CLASSIFICATION REPORT
+# ==========================================================
+
+report_text = classification_report(
+    y_test,
+    pred,
+    zero_division=0
 )
 
-print("\nClassification Report:")
-print(
-    classification_report(
-        y_test,
-        pred,
-        zero_division=0
-    )
+report_dict = classification_report(
+    y_test,
+    pred,
+    output_dict=True,
+    zero_division=0
 )
 
-# --------------------------------------------------
-# Wrong predictions
-# --------------------------------------------------
+
+# ==========================================================
+# WRONG PREDICTIONS
+# ==========================================================
 
 wrong = X_test.copy()
 
 wrong["Actual_Crop"] = y_test.values
+
 wrong["Predicted_Crop"] = pred
 
 wrong = wrong[
@@ -147,72 +182,33 @@ wrong = wrong[
     != wrong["Predicted_Crop"]
 ]
 
-print("\n" + "=" * 70)
-print("WRONG PREDICTIONS")
-print("=" * 70)
 
-print(
-    f"\nWrong predictions: {len(wrong)}"
+# ==========================================================
+# COMMON MISTAKES
+# ==========================================================
+
+mistakes = (
+    wrong
+    .groupby(
+        [
+            "Actual_Crop",
+            "Predicted_Crop",
+        ]
+    )
+    .size()
+    .reset_index(
+        name="Count"
+    )
+    .sort_values(
+        "Count",
+        ascending=False
+    )
 )
 
-print(
-    f"Total test records: {len(X_test)}"
-)
 
-if len(X_test) > 0:
-
-    error_rate = (
-        len(wrong) / len(X_test) * 100
-    )
-
-    print(
-        f"Error rate: {error_rate:.2f}%"
-    )
-
-# --------------------------------------------------
-# Most common mistakes
-# --------------------------------------------------
-
-if not wrong.empty:
-
-    print("\nMost common incorrect predictions:")
-
-    mistakes = (
-        wrong
-        .groupby(
-            ["Actual_Crop", "Predicted_Crop"]
-        )
-        .size()
-        .reset_index(
-            name="Count"
-        )
-        .sort_values(
-            "Count",
-            ascending=False
-        )
-    )
-
-    print(
-        mistakes.to_string(index=False)
-    )
-
-# --------------------------------------------------
-# Save wrong predictions
-# --------------------------------------------------
-
-wrong.to_excel(
-    "output/Wrong_Predictions.xlsx",
-    index=False
-)
-
-print(
-    "\nWrong predictions saved to:"
-    " output/Wrong_Predictions.xlsx"
-)
-
-# --------------------------------------------------
-# Confusion matrix
-# --------------------------------------------------
+# ==========================================================
+# CONFUSION MATRIX
+# ==========================================================
 
 labels = sorted(
     y_test.unique()
@@ -230,11 +226,148 @@ cm_df = pd.DataFrame(
     columns=labels
 )
 
+
+# ==========================================================
+# SUMMARY METRICS
+# ==========================================================
+
+macro_f1 = report_dict[
+    "macro avg"
+]["f1-score"]
+
+weighted_f1 = report_dict[
+    "weighted avg"
+]["f1-score"]
+
+error_rate = (
+    len(wrong)
+    / len(X_test)
+)
+
+metrics = {
+    "test_accuracy": round(
+        float(accuracy),
+        6
+    ),
+    "macro_f1": round(
+        float(macro_f1),
+        6
+    ),
+    "weighted_f1": round(
+        float(weighted_f1),
+        6
+    ),
+    "test_records": int(
+        len(X_test)
+    ),
+    "wrong_predictions": int(
+        len(wrong)
+    ),
+    "error_rate": round(
+        float(error_rate),
+        6
+    ),
+}
+
+
+# ==========================================================
+# SAVE RESULTS
+# ==========================================================
+
+wrong.to_excel(
+    "output/Wrong_Predictions.xlsx",
+    index=False
+)
+
 cm_df.to_excel(
     "output/Confusion_Matrix.xlsx"
+)
+
+with open(
+    "output/model_metrics.json",
+    "w",
+    encoding="utf-8"
+) as file:
+
+    json.dump(
+        metrics,
+        file,
+        indent=4
+    )
+
+
+# ==========================================================
+# PRINT RESULTS
+# ==========================================================
+
+print("=" * 70)
+print("MODEL EVALUATION")
+print("=" * 70)
+
+print(
+    f"\nTest Accuracy: "
+    f"{accuracy * 100:.2f}%"
+)
+
+print(
+    f"Macro F1: "
+    f"{macro_f1:.2f}"
+)
+
+print(
+    f"Weighted F1: "
+    f"{weighted_f1:.2f}"
+)
+
+print(
+    f"Wrong Predictions: "
+    f"{len(wrong)}"
+)
+
+print(
+    f"Total Test Records: "
+    f"{len(X_test)}"
+)
+
+print(
+    f"Error Rate: "
+    f"{error_rate * 100:.2f}%"
+)
+
+print("\nClassification Report:")
+print(report_text)
+
+print("\n" + "=" * 70)
+print("MOST COMMON INCORRECT PREDICTIONS")
+print("=" * 70)
+
+if mistakes.empty:
+
+    print("No incorrect predictions.")
+
+else:
+
+    print(
+        mistakes.to_string(
+            index=False
+        )
+    )
+
+print(
+    "\nWrong predictions saved to:"
+    " output/Wrong_Predictions.xlsx"
 )
 
 print(
     "Confusion matrix saved to:"
     " output/Confusion_Matrix.xlsx"
 )
+
+print(
+    "Metrics saved to:"
+    " output/model_metrics.json"
+)
+
+print("=" * 70)
+print("EVALUATION COMPLETED")
+print("=" * 70)
