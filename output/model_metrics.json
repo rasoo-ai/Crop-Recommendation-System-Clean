@@ -1,0 +1,8 @@
+{
+    "test_accuracy": 0.935341,
+    "macro_f1": 0.681872,
+    "weighted_f1": 0.943483,
+    "test_records": 1129,
+    "wrong_predictions": 73,
+    "error_rate": 0.064659
+}
