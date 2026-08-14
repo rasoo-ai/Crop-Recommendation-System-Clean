@@ -1,15 +1,17 @@
+
 import streamlit as st
 import pandas as pd
 import joblib
 
-# --------------------------------------------------
-# Page Configuration
-# --------------------------------------------------
+
+# ==========================================================
+# PAGE CONFIGURATION
+# ==========================================================
 
 st.set_page_config(
     page_title="Tehsil-wise Crop Analysis",
     page_icon="📍",
-    layout="wide"
+    layout="wide",
 )
 
 st.title("📍 Tehsil-wise Crop Recommendation")
@@ -19,26 +21,32 @@ st.write(
     "observed crop information and machine-learning recommendations."
 )
 
-# --------------------------------------------------
-# Load Model and Dataset
-# --------------------------------------------------
+
+# ==========================================================
+# LOAD MODEL AND DATA
+# ==========================================================
 
 @st.cache_resource
 def load_model():
-    return joblib.load("output/crop_prediction_model.pkl")
+    return joblib.load(
+        "output/crop_prediction_model.pkl"
+    )
 
 
 @st.cache_data
 def load_data():
-    return pd.read_excel("output/Crop_Normalized.xlsx")
+    return pd.read_excel(
+        "output/Crop_Normalized.xlsx"
+    )
 
 
 model = load_model()
 df = load_data()
 
-# --------------------------------------------------
-# Numeric Features Used by Model
-# --------------------------------------------------
+
+# ==========================================================
+# FEATURES USED BY MODEL
+# ==========================================================
 
 numeric_cols = [
     "pH_Value",
@@ -56,12 +64,13 @@ numeric_cols = [
     "Sulphur (%)",
     "Rainfall_cm",
     "temperature_celsius",
-    "humidity_percentage"
+    "humidity_percentage",
 ]
 
-# --------------------------------------------------
-# State Selection
-# --------------------------------------------------
+
+# ==========================================================
+# LOCATION SELECTION
+# ==========================================================
 
 states = sorted(
     df["State_Name"]
@@ -75,13 +84,12 @@ selected_state = st.selectbox(
     states
 )
 
-# --------------------------------------------------
-# District Selection
-# --------------------------------------------------
 
 state_df = df[
-    df["State_Name"].astype(str) == selected_state
+    df["State_Name"].astype(str)
+    == selected_state
 ].copy()
+
 
 districts = sorted(
     state_df["District_Name"]
@@ -95,14 +103,12 @@ selected_district = st.selectbox(
     districts
 )
 
-# --------------------------------------------------
-# Tehsil Selection
-# --------------------------------------------------
 
 district_df = state_df[
     state_df["District_Name"].astype(str)
     == selected_district
 ].copy()
+
 
 tehsils = sorted(
     district_df["Tehsil_Name"]
@@ -116,15 +122,17 @@ selected_tehsil = st.selectbox(
     tehsils
 )
 
+
 st.markdown("---")
 
-# --------------------------------------------------
-# Generate Recommendation
-# --------------------------------------------------
+
+# ==========================================================
+# GENERATE RECOMMENDATION
+# ==========================================================
 
 if st.button(
     "📍 Generate Tehsil Recommendation",
-    width="stretch"
+    width="stretch",
 ):
 
     tehsil_df = district_df[
@@ -133,26 +141,35 @@ if st.button(
     ].copy()
 
     if tehsil_df.empty:
-        st.error("No data found for the selected tehsil.")
+        st.error(
+            "No data found for the selected tehsil."
+        )
         st.stop()
 
-    # ==================================================
+
+    # ======================================================
     # OBSERVED CROP INFORMATION
-    # ==================================================
+    # ======================================================
 
-    st.subheader("🌾 Observed Crop Information")
+    st.subheader(
+        "🌾 Observed Crop Information"
+    )
 
-    # Convert area safely
     tehsil_df["ha"] = pd.to_numeric(
         tehsil_df["ha"],
-        errors="coerce"
+        errors="coerce",
     )
 
     observed_crop_summary = (
         tehsil_df
-        .groupby("Crop", dropna=True)["ha"]
+        .groupby(
+            "Crop",
+            dropna=True
+        )["ha"]
         .sum()
-        .sort_values(ascending=False)
+        .sort_values(
+            ascending=False
+        )
     )
 
     if observed_crop_summary.empty:
@@ -173,7 +190,8 @@ if st.button(
         )
 
         st.success(
-            f"Major recorded crop: **{top_observed_crop}** "
+            f"Major recorded crop: "
+            f"**{top_observed_crop}** "
             f"({top_observed_area:,.2f} ha)"
         )
 
@@ -183,56 +201,64 @@ if st.button(
             .rename(
                 columns={
                     "Crop": "Crop",
-                    "ha": "Recorded Area (ha)"
+                    "ha": "Recorded Area (ha)",
                 }
             )
         )
 
-        observed_table["Recorded Area (ha)"] = (
-            observed_table["Recorded Area (ha)"]
-            .round(2)
+        observed_table[
+            "Recorded Area (ha)"
+        ] = (
+            observed_table[
+                "Recorded Area (ha)"
+            ].round(2)
         )
 
         st.dataframe(
             observed_table,
             width="stretch",
-            hide_index=True
+            hide_index=True,
         )
 
-    # ==================================================
-    # REPRESENTATIVE CONDITIONS
-    # ==================================================
+
+    # ======================================================
+    # REPRESENTATIVE NUMERIC CONDITIONS
+    # ======================================================
 
     tehsil_numeric = tehsil_df[
         numeric_cols
     ].apply(
         pd.to_numeric,
-        errors="coerce"
+        errors="coerce",
     )
 
     averages = tehsil_numeric.mean(
         skipna=True
     )
 
+
     # Overall fallback values
     overall_numeric = df[
         numeric_cols
     ].apply(
         pd.to_numeric,
-        errors="coerce"
+        errors="coerce",
     )
 
-    overall_averages = overall_numeric.mean(
-        skipna=True
+    overall_averages = (
+        overall_numeric.mean(
+            skipna=True
+        )
     )
 
     averages = averages.fillna(
         overall_averages
     )
 
-    # --------------------------------------------------
-    # Representative Soil Type
-    # --------------------------------------------------
+
+    # ======================================================
+    # REPRESENTATIVE SOIL TYPE
+    # ======================================================
 
     soil_mode = (
         tehsil_df["Soil_Type"]
@@ -244,11 +270,14 @@ if st.button(
     if soil_mode.empty:
         representative_soil = "Unknown"
     else:
-        representative_soil = soil_mode.iloc[0]
+        representative_soil = (
+            soil_mode.iloc[0]
+        )
 
-    # --------------------------------------------------
-    # Representative Agro-climatic Zone
-    # --------------------------------------------------
+
+    # ======================================================
+    # REPRESENTATIVE AGRO-CLIMATIC ZONE
+    # ======================================================
 
     zone_mode = (
         tehsil_df["Agro_Climatic Zone"]
@@ -260,26 +289,43 @@ if st.button(
     if zone_mode.empty:
         representative_zone = "Unknown"
     else:
-        representative_zone = zone_mode.iloc[0]
+        representative_zone = (
+            zone_mode.iloc[0]
+        )
 
-    # ==================================================
+
+    # ======================================================
     # CREATE MODEL INPUT
-    # ==================================================
+    # ======================================================
 
     sample = pd.DataFrame([{
-        "Soil_Type": representative_soil,
+
+        "Soil_Type":
+            representative_soil,
 
         "pH_Value":
-            float(averages["pH_Value"]),
+            float(
+                averages["pH_Value"]
+            ),
 
         "Nitrogen_Value (N)":
-            float(averages["Nitrogen_Value (N)"]),
+            float(
+                averages["Nitrogen_Value (N)"]
+            ),
 
         "Phosphorus_Value (P)":
-            float(averages["Phosphorus_Value (P)"]),
+            float(
+                averages[
+                    "Phosphorus_Value (P)"
+                ]
+            ),
 
         "Potassium_Value (K)":
-            float(averages["Potassium_Value (K)"]),
+            float(
+                averages[
+                    "Potassium_Value (K)"
+                ]
+            ),
 
         "Electrical_Conductivity (EC)":
             float(
@@ -290,19 +336,27 @@ if st.button(
 
         "Organic_Carbon (%)":
             float(
-                averages["Organic_Carbon (%)"]
+                averages[
+                    "Organic_Carbon (%)"
+                ]
             ),
 
         "Soil_Moisture (%)":
             float(
-                averages["Soil_Moisture (%)"]
+                averages[
+                    "Soil_Moisture (%)"
+                ]
             ),
 
         "Zinc (%)":
-            float(averages["Zinc (%)"]),
+            float(
+                averages["Zinc (%)"]
+            ),
 
         "Iron (%)":
-            float(averages["Iron (%)"]),
+            float(
+                averages["Iron (%)"]
+            ),
 
         "Manganese (%)":
             float(
@@ -310,91 +364,189 @@ if st.button(
             ),
 
         "Copper (%)":
-            float(averages["Copper (%)"]),
+            float(
+                averages["Copper (%)"]
+            ),
 
         "Boron (%)":
-            float(averages["Boron (%)"]),
+            float(
+                averages["Boron (%)"]
+            ),
 
         "Sulphur (%)":
-            float(averages["Sulphur (%)"]),
+            float(
+                averages["Sulphur (%)"]
+            ),
 
         "Rainfall_cm":
-            float(averages["Rainfall_cm"]),
+            float(
+                averages["Rainfall_cm"]
+            ),
 
         "temperature_celsius":
             float(
-                averages["temperature_celsius"]
+                averages[
+                    "temperature_celsius"
+                ]
             ),
 
         "humidity_percentage":
             float(
-                averages["humidity_percentage"]
+                averages[
+                    "humidity_percentage"
+                ]
             ),
 
         "State_Name":
             selected_state,
 
         "Agro_Climatic Zone":
-            representative_zone
+            representative_zone,
     }])
 
-    # ==================================================
+
+    # ======================================================
     # MACHINE LEARNING PREDICTION
-    # ==================================================
+    # ======================================================
 
     try:
 
-        prediction = model.predict(sample)[0]
+        prediction = model.predict(
+            sample
+        )[0]
 
-        probabilities = model.predict_proba(sample)[0]
-
-        top3 = probabilities.argsort()[-3:][::-1]
-
-        confidence = (
-            probabilities[top3[0]] * 100
+        probabilities = (
+            model.predict_proba(
+                sample
+            )[0]
         )
 
-        # --------------------------------------------------
-        # Location Summary
-        # --------------------------------------------------
+        top3 = (
+            probabilities
+            .argsort()[-3:][::-1]
+        )
+
+        confidence = (
+            probabilities[top3[0]]
+            * 100
+        )
+
+
+        # ==================================================
+        # RELIABILITY LEVEL
+        # ==================================================
+
+        if confidence >= 70:
+
+            reliability = "High"
+
+        elif confidence >= 50:
+
+            reliability = "Moderate"
+
+        else:
+
+            reliability = "Low"
+
+
+        # ==================================================
+        # LOCATION SUMMARY
+        # ==================================================
 
         st.markdown("---")
 
         col1, col2, col3 = st.columns(3)
 
         with col1:
+
             st.metric(
                 "State",
                 selected_state
             )
 
         with col2:
+
             st.metric(
                 "District",
                 selected_district
             )
 
         with col3:
+
             st.metric(
                 "Tehsil",
                 selected_tehsil
             )
 
-        # --------------------------------------------------
-        # ML Recommendation
-        # --------------------------------------------------
 
-        st.subheader("🤖 Machine Learning Recommendation")
+        # ==================================================
+        # MAIN ML RESULT
+        # ==================================================
+
+        st.subheader(
+            "🤖 Machine Learning Recommendation"
+        )
 
         st.success(
-            f"Recommended Crop for **{selected_tehsil}**: "
+            f"Recommended Crop for "
+            f"**{selected_tehsil}**: "
             f"**{prediction}**"
         )
 
-        st.write(
-            f"Prediction confidence: "
-            f"**{confidence:.2f}%**"
+        col_a, col_b = st.columns(2)
+
+        with col_a:
+
+            st.metric(
+                "Prediction Confidence",
+                f"{confidence:.2f}%"
+            )
+
+        with col_b:
+
+            st.metric(
+                "Prediction Reliability",
+                reliability
+            )
+
+
+        # ==================================================
+        # TOP 3 RECOMMENDATIONS
+        # ==================================================
+
+        st.markdown("---")
+
+        st.subheader(
+            "🏆 Top 3 Model Recommendations"
         )
+
+        for rank, index in enumerate(
+            top3,
+            start=1
+        ):
+
+            crop = model.classes_[index]
+
+            crop_confidence = (
+                probabilities[index]
+                * 100
+            )
+
+            st.write(
+                f"### {rank}. {crop}"
+            )
+
+            st.progress(
+                float(
+                    probabilities[index]
+                )
+            )
+
+            st.write(
+                f"Confidence: "
+                f"**{crop_confidence:.2f}%**"
+            )
+
 
         # ==================================================
         # REPRESENTATIVE CONDITIONS
@@ -402,18 +554,24 @@ if st.button(
 
         st.markdown("---")
 
-        st.subheader("🌱 Representative Conditions")
+        st.subheader(
+            "🌱 Representative Conditions"
+        )
 
-        condition_col1, condition_col2 = st.columns(2)
+        condition_col1, condition_col2 = (
+            st.columns(2)
+        )
 
         with condition_col1:
 
             st.write(
-                f"**Soil Type:** {representative_soil}"
+                f"**Soil Type:** "
+                f"{representative_soil}"
             )
 
             st.write(
-                f"**pH:** {averages['pH_Value']:.2f}"
+                f"**pH:** "
+                f"{averages['pH_Value']:.2f}"
             )
 
             st.write(
@@ -453,37 +611,6 @@ if st.button(
                 f"{representative_zone}"
             )
 
-        # ==================================================
-        # TOP 3 MODEL RECOMMENDATIONS
-        # ==================================================
-
-        st.markdown("---")
-
-        st.subheader("🏆 Top 3 Model Recommendations")
-
-        for rank, index in enumerate(
-            top3,
-            start=1
-        ):
-
-            crop = model.classes_[index]
-
-            crop_confidence = (
-                probabilities[index] * 100
-            )
-
-            st.write(
-                f"### {rank}. {crop}"
-            )
-
-            st.progress(
-                float(probabilities[index])
-            )
-
-            st.write(
-                f"Confidence: "
-                f"**{crop_confidence:.2f}%**"
-            )
 
         # ==================================================
         # DATASET EVIDENCE VS MODEL
@@ -491,7 +618,9 @@ if st.button(
 
         st.markdown("---")
 
-        st.subheader("🔎 Dataset Evidence vs Model")
+        st.subheader(
+            "🔎 Dataset Evidence vs Model"
+        )
 
         if not observed_crop_summary.empty:
 
@@ -503,19 +632,51 @@ if st.button(
 
                 st.success(
                     f"✅ The ML recommendation "
-                    f"(**{prediction}**) matches the "
-                    f"major crop recorded in the dataset "
-                    f"for this tehsil."
+                    f"(**{prediction}**) matches "
+                    f"the major crop recorded in "
+                    f"the dataset for this tehsil."
                 )
 
             else:
 
                 st.warning(
                     f"⚠️ The ML recommendation "
-                    f"(**{prediction}**) differs from the "
-                    f"major crop recorded in the dataset "
+                    f"(**{prediction}**) differs "
+                    f"from the major crop recorded "
+                    f"in the dataset "
                     f"(**{observed_crop}**)."
                 )
+
+
+        # ==================================================
+        # INTERPRETATION
+        # ==================================================
+
+        if reliability == "High":
+
+            st.success(
+                "The model assigns a relatively high "
+                "probability to its top recommendation. "
+                "This is a model-confidence indicator, "
+                "not a guarantee of crop suitability."
+            )
+
+        elif reliability == "Moderate":
+
+            st.warning(
+                "The model shows moderate confidence. "
+                "The alternative crops should also be "
+                "considered before making a decision."
+            )
+
+        else:
+
+            st.warning(
+                "The model has low confidence. "
+                "Treat this recommendation cautiously "
+                "and consider the top alternative crops."
+            )
+
 
         # ==================================================
         # DISCLAIMER
@@ -523,15 +684,18 @@ if st.button(
 
         st.info(
             "This recommendation is based on the available "
-            "dataset and representative environmental conditions. "
-            "Actual crop suitability can vary with irrigation, "
-            "season, soil variability, and local farming practices."
+            "dataset and representative environmental "
+            "conditions. Actual crop suitability can vary "
+            "with irrigation, season, soil variability, "
+            "and local farming practices."
         )
 
         st.caption(
-            f"Analysis based on {len(tehsil_df)} "
-            f"dataset record(s) for this tehsil."
+            f"Analysis based on "
+            f"{len(tehsil_df)} dataset record(s) "
+            f"for this tehsil."
         )
+
 
     except Exception as error:
 
@@ -540,3 +704,4 @@ if st.button(
         )
 
         st.exception(error)
+
