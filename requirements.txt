@@ -5,3 +5,6 @@ scikit-learn
 joblib
 openpyxl
 matplotlib
+
+folium
+streamlit-folium
