@@ -1,644 +1,268 @@
 import streamlit as st
-import pandas as pd
-import joblib
+
 
 # ==========================================================
 # PAGE CONFIGURATION
 # ==========================================================
 
 st.set_page_config(
-    page_title="Crop Recommendation System",
+    page_title="Smart Kisan",
     page_icon="🌾",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded",
 )
 
-# ==========================================================
-# LOAD MODEL AND DATASET
-# ==========================================================
-
-@st.cache_resource
-def load_model():
-    return joblib.load("output/crop_prediction_model.pkl")
-
-
-@st.cache_data
-def load_dataset():
-    return pd.read_excel("output/Crop_Normalized.xlsx")
-
-
-model = load_model()
-df = load_dataset()
 
 # ==========================================================
-# PREPARE DROPDOWN VALUES
+# SIMPLE CSS
 # ==========================================================
-
-soil_types = sorted(
-    df["Soil_Type"].dropna().astype(str).unique()
-)
-
-states = sorted(
-    df["State_Name"].dropna().astype(str).unique()
-)
-
-zones = sorted(
-    df["Agro_Climatic Zone"].dropna().astype(str).unique()
-)
-
-# ==========================================================
-# TITLE
-# ==========================================================
-
-st.title("🌾 Crop Recommendation System")
 
 st.markdown(
-    "### Machine Learning Based Crop Recommendation "
-    "Using Soil & Weather Parameters"
+    """
+    <style>
+    .stApp {
+        background-color: #f7faf7;
+    }
+
+    .block-container {
+        max-width: 1250px;
+        padding-top: 2rem;
+        padding-bottom: 3rem;
+    }
+
+    footer {
+        visibility: hidden;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
 )
 
-st.markdown("---")
 
 # ==========================================================
-# SECTION 1 - INDIVIDUAL CROP PREDICTION
+# SIDEBAR
 # ==========================================================
 
-st.header("🌱 Individual Crop Recommendation")
+with st.sidebar:
+
+    st.title("🌾 Smart Kisan")
+    st.caption("Smart farming assistant")
+
+    st.divider()
+
+    st.subheader("🧭 Navigation")
+
+    st.page_link(
+        "app.py",
+        label="🏠 Home",
+    )
+
+    st.page_link(
+        "pages/3_Tehsil_Analysis.py",
+        label="📍 Tehsil Analysis",
+    )
+
+    st.page_link(
+        "pages/4_Model_Performance.py",
+        label="📊 Model Performance",
+    )
+
+    st.divider()
+
+    st.success(
+        "Model V1\n\n"
+        "Random Forest\n\n"
+        "Test Accuracy: 93.53%\n\n"
+        "Test Records: 1,129"
+    )
+
+
+# ==========================================================
+# HEADER
+# ==========================================================
+
+st.title("🌾 Smart Kisan")
+
+st.subheader(
+    "AI-powered farming decisions made simple."
+)
 
 st.write(
-    "Enter soil, weather and geographical parameters "
-    "to predict the most suitable crop."
+    "Smart Kisan uses agricultural data and machine learning "
+    "to support crop recommendations and regional agricultural analysis."
 )
 
-col1, col2 = st.columns(2)
+st.divider()
 
-# ----------------------------------------------------------
-# LEFT COLUMN
-# ----------------------------------------------------------
-
-with col1:
-
-    soil_type = st.selectbox(
-        "Soil Type",
-        soil_types
-    )
-
-    state = st.selectbox(
-        "State",
-        states
-    )
-
-    zone = st.selectbox(
-        "Agro Climatic Zone",
-        zones
-    )
-
-    ph = st.number_input(
-        "pH Value",
-        value=6.8,
-        step=0.1
-    )
-
-    nitrogen = st.number_input(
-        "Nitrogen (N)",
-        value=120.0,
-        step=1.0
-    )
-
-    phosphorus = st.number_input(
-        "Phosphorus (P)",
-        value=40.0,
-        step=1.0
-    )
-
-    potassium = st.number_input(
-        "Potassium (K)",
-        value=180.0,
-        step=1.0
-    )
-
-    ec = st.number_input(
-        "Electrical Conductivity",
-        value=0.4,
-        step=0.1
-    )
-
-# ----------------------------------------------------------
-# RIGHT COLUMN
-# ----------------------------------------------------------
-
-with col2:
-
-    organic = st.number_input(
-        "Organic Carbon (%)",
-        value=0.8,
-        step=0.1
-    )
-
-    moisture = st.number_input(
-        "Soil Moisture (%)",
-        value=30.0,
-        step=1.0
-    )
-
-    zinc = st.number_input(
-        "Zinc (%)",
-        value=0.6,
-        step=0.1
-    )
-
-    iron = st.number_input(
-        "Iron (%)",
-        value=3.2,
-        step=0.1
-    )
-
-    manganese = st.number_input(
-        "Manganese (%)",
-        value=1.1,
-        step=0.1
-    )
-
-    copper = st.number_input(
-        "Copper (%)",
-        value=0.3,
-        step=0.1
-    )
-
-    boron = st.number_input(
-        "Boron (%)",
-        value=0.4,
-        step=0.1
-    )
-
-    sulphur = st.number_input(
-        "Sulphur (%)",
-        value=12.0,
-        step=1.0
-    )
-
-    rainfall = st.number_input(
-        "Rainfall (cm)",
-        value=120.0,
-        step=1.0
-    )
-
-    temperature = st.number_input(
-        "Temperature (°C)",
-        value=28.0,
-        step=0.1
-    )
-
-    humidity = st.number_input(
-        "Humidity (%)",
-        value=75.0,
-        step=1.0
-    )
 
 # ==========================================================
-# INDIVIDUAL PREDICTION
+# WELCOME
 # ==========================================================
 
-st.markdown("---")
-
-if st.button(
-    "🌾 Predict Crop",
-    use_container_width=True
-):
-
-    sample = pd.DataFrame([{
-        "Soil_Type": soil_type,
-        "pH_Value": ph,
-        "Nitrogen_Value (N)": nitrogen,
-        "Phosphorus_Value (P)": phosphorus,
-        "Potassium_Value (K)": potassium,
-        "Electrical_Conductivity (EC)": ec,
-        "Organic_Carbon (%)": organic,
-        "Soil_Moisture (%)": moisture,
-        "Zinc (%)": zinc,
-        "Iron (%)": iron,
-        "Manganese (%)": manganese,
-        "Copper (%)": copper,
-        "Boron (%)": boron,
-        "Sulphur (%)": sulphur,
-        "Rainfall_cm": rainfall,
-        "temperature_celsius": temperature,
-        "humidity_percentage": humidity,
-        "State_Name": state,
-        "Agro_Climatic Zone": zone
-    }])
-
-    try:
-
-        prediction = model.predict(sample)[0]
-
-        probabilities = model.predict_proba(sample)[0]
-
-        st.success(
-            f"### 🌾 Recommended Crop: **{prediction}**"
-        )
-
-        st.markdown("## 🏆 Top 3 Recommendations")
-
-        top3 = probabilities.argsort()[-3:][::-1]
-
-        for rank, index in enumerate(top3, start=1):
-
-            crop = model.classes_[index]
-
-            confidence = probabilities[index] * 100
-
-            st.write(
-                f"### {rank}. {crop}"
-            )
-
-            st.progress(
-                float(probabilities[index])
-            )
-
-            st.write(
-                f"Confidence: **{confidence:.2f}%**"
-            )
-
-    except Exception as error:
-
-        st.error(
-            "Unable to generate the crop prediction."
-        )
-
-        st.exception(error)
-
-# ==========================================================
-# SECTION 2 - STATE-WISE CROP RECOMMENDATIONS
-# ==========================================================
-
-st.markdown("---")
-
-st.header("🇮🇳 State-wise Crop Recommendations")
+st.header("👨‍🌾 Welcome")
 
 st.write(
-    "Generate representative crop recommendations for "
-    "all states available in the dataset."
+    "Smart Kisan is being developed as a farmer-focused "
+    "agriculture assistant. The platform combines machine "
+    "learning with regional agricultural information and "
+    "future weather and market services."
 )
 
-if st.button(
-    "🇮🇳 Generate State-wise Recommendations",
-    use_container_width=True
-):
-
-    with st.spinner(
-        "Calculating state-wise recommendations..."
-    ):
-
-        # --------------------------------------------------
-        # NUMERIC FEATURES
-        # --------------------------------------------------
-
-        numeric_cols = [
-            "pH_Value",
-            "Nitrogen_Value (N)",
-            "Phosphorus_Value (P)",
-            "Potassium_Value (K)",
-            "Electrical_Conductivity (EC)",
-            "Organic_Carbon (%)",
-            "Soil_Moisture (%)",
-            "Zinc (%)",
-            "Iron (%)",
-            "Manganese (%)",
-            "Copper (%)",
-            "Boron (%)",
-            "Sulphur (%)",
-            "Rainfall_cm",
-            "temperature_celsius",
-            "humidity_percentage"
-        ]
-
-        results = []
-
-        # --------------------------------------------------
-        # PROCESS EVERY STATE
-        # --------------------------------------------------
-
-        for current_state in states:
-
-            state_df = df[
-                df["State_Name"].astype(str)
-                == current_state
-            ].copy()
-
-            if state_df.empty:
-                continue
-
-            # ------------------------------------------------
-            # SAFE NUMERIC CONVERSION
-            # ------------------------------------------------
-
-            state_numeric = state_df[
-                numeric_cols
-            ].apply(
-                pd.to_numeric,
-                errors="coerce"
-            )
-
-            # ------------------------------------------------
-            # CALCULATE SAFE AVERAGES
-            # ------------------------------------------------
-
-            averages = state_numeric.mean(
-                skipna=True
-            )
-
-            # ------------------------------------------------
-            # CHECK MISSING NUMERIC VALUES
-            # ------------------------------------------------
-
-            if averages.isna().all():
-                continue
-
-            # Fill any missing averages from the
-            # overall dataset averages
-            overall_numeric = df[
-                numeric_cols
-            ].apply(
-                pd.to_numeric,
-                errors="coerce"
-            )
-
-            overall_averages = overall_numeric.mean(
-                skipna=True
-            )
-
-            averages = averages.fillna(
-                overall_averages
-            )
-
-            # ------------------------------------------------
-            # MOST COMMON SOIL TYPE
-            # ------------------------------------------------
-
-            soil_mode = (
-                state_df["Soil_Type"]
-                .dropna()
-                .astype(str)
-                .mode()
-            )
-
-            if not soil_mode.empty:
-                representative_soil = soil_mode.iloc[0]
-            else:
-                representative_soil = soil_types[0]
-
-            # ------------------------------------------------
-            # MOST COMMON AGRO-CLIMATIC ZONE
-            # ------------------------------------------------
-
-            zone_mode = (
-                state_df["Agro_Climatic Zone"]
-                .dropna()
-                .astype(str)
-                .mode()
-            )
-
-            if not zone_mode.empty:
-                representative_zone = zone_mode.iloc[0]
-            else:
-                representative_zone = zones[0]
-
-            # ------------------------------------------------
-            # CREATE REPRESENTATIVE SAMPLE
-            # ------------------------------------------------
-
-            state_sample = pd.DataFrame([{
-                "Soil_Type": representative_soil,
-
-                "pH_Value":
-                    float(averages["pH_Value"]),
-
-                "Nitrogen_Value (N)":
-                    float(
-                        averages["Nitrogen_Value (N)"]
-                    ),
-
-                "Phosphorus_Value (P)":
-                    float(
-                        averages["Phosphorus_Value (P)"]
-                    ),
-
-                "Potassium_Value (K)":
-                    float(
-                        averages["Potassium_Value (K)"]
-                    ),
-
-                "Electrical_Conductivity (EC)":
-                    float(
-                        averages[
-                            "Electrical_Conductivity (EC)"
-                        ]
-                    ),
-
-                "Organic_Carbon (%)":
-                    float(
-                        averages["Organic_Carbon (%)"]
-                    ),
-
-                "Soil_Moisture (%)":
-                    float(
-                        averages["Soil_Moisture (%)"]
-                    ),
-
-                "Zinc (%)":
-                    float(
-                        averages["Zinc (%)"]
-                    ),
-
-                "Iron (%)":
-                    float(
-                        averages["Iron (%)"]
-                    ),
-
-                "Manganese (%)":
-                    float(
-                        averages["Manganese (%)"]
-                    ),
-
-                "Copper (%)":
-                    float(
-                        averages["Copper (%)"]
-                    ),
-
-                "Boron (%)":
-                    float(
-                        averages["Boron (%)"]
-                    ),
-
-                "Sulphur (%)":
-                    float(
-                        averages["Sulphur (%)"]
-                    ),
-
-                "Rainfall_cm":
-                    float(
-                        averages["Rainfall_cm"]
-                    ),
-
-                "temperature_celsius":
-                    float(
-                        averages["temperature_celsius"]
-                    ),
-
-                "humidity_percentage":
-                    float(
-                        averages[
-                            "humidity_percentage"
-                        ]
-                    ),
-
-                "State_Name": current_state,
-
-                "Agro_Climatic Zone":
-                    representative_zone
-            }])
-
-            # ------------------------------------------------
-            # PREDICT STATE CROP
-            # ------------------------------------------------
-
-            try:
-
-                prediction = model.predict(
-                    state_sample
-                )[0]
-
-                probabilities = model.predict_proba(
-                    state_sample
-                )[0]
-
-                # Top 3 predictions
-                top3 = probabilities.argsort()[-3:][::-1]
-
-                results.append({
-                    "State":
-                        current_state,
-
-                    "Soil Type":
-                        representative_soil,
-
-                    "Agro Climatic Zone":
-                        representative_zone,
-
-                    "Recommended Crop":
-                        model.classes_[top3[0]],
-
-                    "Confidence (%)":
-                        round(
-                            probabilities[top3[0]] * 100,
-                            2
-                        ),
-
-                    "Second Choice":
-                        model.classes_[top3[1]],
-
-                    "Third Choice":
-                        model.classes_[top3[2]]
-                })
-
-            except Exception:
-                continue
-
-        # ==================================================
-        # DISPLAY RESULTS
-        # ==================================================
-
-        state_results = pd.DataFrame(results)
-
-        if state_results.empty:
-
-            st.error(
-                "No state-wise recommendations could be generated."
-            )
-
-        else:
-
-            st.success(
-                f"Successfully generated recommendations "
-                f"for {len(state_results)} states."
-            )
-
-            # ------------------------------------------------
-            # TABLE
-            # ------------------------------------------------
-
-            st.dataframe(
-                state_results,
-                use_container_width=True,
-                hide_index=True
-            )
-
-            # ------------------------------------------------
-            # SUMMARY METRICS
-            # ------------------------------------------------
-
-            st.markdown("## 📊 Recommendation Summary")
-
-            metric1, metric2 = st.columns(2)
-
-            with metric1:
-
-                st.metric(
-                    "States Analyzed",
-                    len(state_results)
-                )
-
-            with metric2:
-
-                st.metric(
-                    "Different Recommended Crops",
-                    state_results[
-                        "Recommended Crop"
-                    ].nunique()
-                )
-
-            # ------------------------------------------------
-            # CROP DISTRIBUTION
-            # ------------------------------------------------
-
-            st.markdown(
-                "### 🌾 Recommended Crop Distribution"
-            )
-
-            crop_counts = (
-                state_results[
-                    "Recommended Crop"
-                ]
-                .value_counts()
-            )
-
-            st.bar_chart(
-                crop_counts
-            )
-
-            # ------------------------------------------------
-            # DOWNLOAD RESULTS
-            # ------------------------------------------------
-
-            csv_data = state_results.to_csv(
-                index=False
-            )
-
-            st.download_button(
-                label="📥 Download State-wise Results",
-                data=csv_data,
-                file_name="Statewise_Crop_Recommendations.csv",
-                mime="text/csv",
-                use_container_width=True
-            )
 
 # ==========================================================
-# FOOTER
+# MAIN FEATURES
 # ==========================================================
 
-st.markdown("---")
+st.header("🌱 Main Features")
+
+
+c1, c2, c3 = st.columns(3)
+
+with c1:
+    with st.container(border=True):
+        st.subheader("🌱 Crop Recommendation")
+        st.write(
+            "Get a machine-learning-based crop recommendation "
+            "using soil, weather and location information."
+        )
+        st.info("Main AI feature — Day 2")
+
+
+with c2:
+    with st.container(border=True):
+        st.subheader("📍 Tehsil Analysis")
+        st.write(
+            "Explore crop information and representative "
+            "recommendations for different regions."
+        )
+        st.page_link(
+            "pages/3_Tehsil_Analysis.py",
+            label="Open Tehsil Analysis",
+        )
+
+
+with c3:
+    with st.container(border=True):
+        st.subheader("📊 Model Performance")
+        st.write(
+            "View the verified evaluation metrics and "
+            "understand the current ML model."
+        )
+        st.page_link(
+            "pages/4_Model_Performance.py",
+            label="Open Model Performance",
+        )
+
+
+c4, c5, c6 = st.columns(3)
+
+
+with c4:
+    with st.container(border=True):
+        st.subheader("🌦️ Weather")
+        st.write(
+            "Weather information will support irrigation, "
+            "spraying and farm planning."
+        )
+        st.warning("Coming in a later development phase.")
+
+
+with c5:
+    with st.container(border=True):
+        st.subheader("💰 Mandi Prices")
+        st.write(
+            "Market information can help farmers compare "
+            "crop prices and selling opportunities."
+        )
+        st.warning("Coming in a later development phase.")
+
+
+with c6:
+    with st.container(border=True):
+        st.subheader("👨‍🌾 My Farm")
+        st.write(
+            "Future versions can store farm details, "
+            "crop history and recommendations."
+        )
+        st.warning("Coming in a later development phase.")
+
+
+# ==========================================================
+# CURRENT MODEL
+# ==========================================================
+
+st.divider()
+
+st.header("✅ Current ML Baseline")
+
+with st.container(border=True):
+
+    st.subheader(
+        "Random Forest Crop Recommendation Model"
+    )
+
+    col1, col2, col3, col4 = st.columns(4)
+
+    col1.metric(
+        "Test Accuracy",
+        "93.53%",
+    )
+
+    col2.metric(
+        "Top-3 Accuracy",
+        "98.14%",
+    )
+
+    col3.metric(
+        "Macro F1",
+        "0.68",
+    )
+
+    col4.metric(
+        "Test Records",
+        "1,129",
+    )
+
+    st.write(
+        "This is the current Model V1 baseline. "
+        "The model will remain unchanged while the "
+        "farmer application is developed."
+    )
+
+
+# ==========================================================
+# DEVELOPMENT STATUS
+# ==========================================================
+
+st.header("🚀 Development Status")
+
+with st.container(border=True):
+
+    st.subheader(
+        "Day 1 — Foundation Complete ✅"
+    )
+
+    st.write(
+        "The Smart Kisan home page and navigation foundation "
+        "are complete."
+    )
+
+    st.info(
+        "Next step: build the farmer-friendly "
+        "Crop Recommendation page using the existing "
+        "production ML model."
+    )
+
+
+# ==========================================================
+# DISCLAIMER
+# ==========================================================
+
+st.divider()
 
 st.caption(
-    "Crop Recommendation System using Machine Learning | "
-    "Random Forest Classifier"
+    "🌾 Smart Kisan provides data-driven agricultural guidance. "
+    "Recommendations are not guarantees of crop yield or profit. "
+    "Farmers should consider local conditions and qualified "
+    "agricultural advice before making planting decisions."
 )

@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 
 # Load trained model
-model = joblib.load("output/crop_prediction_model.pkl")
+model = joblib.load("output/crop_prediction_model_balanced.pkl")
 
 # Sample input
 sample = pd.DataFrame([{

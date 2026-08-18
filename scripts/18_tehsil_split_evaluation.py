@@ -13,7 +13,7 @@ from sklearn.model_selection import GroupShuffleSplit
 # --------------------------------------------------
 
 df = pd.read_excel("output/Crop_Normalized.xlsx")
-model = joblib.load("output/crop_prediction_model.pkl")
+model = joblib.load("output/crop_prediction_model_balanced.pkl")
 
 # --------------------------------------------------
 # Same feature definition as training

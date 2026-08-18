@@ -29,7 +29,7 @@ st.write(
 @st.cache_resource
 def load_model():
     return joblib.load(
-        "output/crop_prediction_model.pkl"
+        "output/crop_prediction_model_balanced.pkl"
     )
 
 

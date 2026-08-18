@@ -269,7 +269,7 @@ print(importance.head(20))
 
 joblib.dump(
     best,
-    "output/crop_prediction_model.pkl",
+    "output/crop_prediction_model_balanced.pkl",
 )
 
 print("\nModel saved successfully!")
