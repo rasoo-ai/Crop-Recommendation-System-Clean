@@ -389,9 +389,4 @@ with tab4:
 # ==========================================================
 
 st.divider()
-st.caption(
-    "📊 Smart Kisan Model Performance | "
-    "Random Forest Classifier (balanced) | "
-    f"Test accuracy: {metrics['test_accuracy']*100:.2f}% | "
-    f"Macro F1: {metrics['macro_f1']:.3f}"
-)git add . ; git commit -m "feat: model performance - 4 tabs, F1 bars, feature importance, misclassifications" ; git push
+st.caption('Smart Kisan Model Performance | Random Forest Classifier')
