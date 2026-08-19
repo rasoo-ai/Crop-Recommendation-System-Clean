@@ -7,7 +7,7 @@
 
 st.set_page_config(
     page_title="Smart Kisan",
-    page_icon="🌾",
+    page_icon="≡ƒî╛",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -45,26 +45,26 @@ st.markdown(
 
 with st.sidebar:
 
-    st.title("🌾 Smart Kisan")
+    st.title("≡ƒî╛ Smart Kisan")
     st.caption("Smart farming assistant")
 
     st.divider()
 
-    st.subheader("🧭 Navigation")
+    st.subheader("≡ƒº¡ Navigation")
 
     st.page_link(
         "app.py",
-        label="🏠 Home",
+        label="≡ƒÅá Home",
     )
 
     st.page_link(
         "pages/3_Tehsil_Analysis.py",
-        label="📍 Tehsil Analysis",
+        label="≡ƒôì Tehsil Analysis",
     )
 
     st.page_link(
         "pages/4_Model_Performance.py",
-        label="📊 Model Performance",
+        label="≡ƒôè Model Performance",
     )
 
     st.divider()
@@ -81,7 +81,7 @@ with st.sidebar:
 # HEADER
 # ==========================================================
 
-st.title("🌾 Smart Kisan")
+st.title("≡ƒî╛ Smart Kisan")
 
 st.subheader(
     "AI-powered farming decisions made simple."
@@ -99,7 +99,7 @@ st.divider()
 # WELCOME
 # ==========================================================
 
-st.header("👨‍🌾🌾 Welcome")
+st.header("≡ƒæ¿ΓÇì≡ƒî╛ Welcome")
 
 st.write(
     "Smart Kisan is being developed as a farmer-focused "
@@ -113,24 +113,24 @@ st.write(
 # MAIN FEATURES
 # ==========================================================
 
-st.header("🌱 Main Features")
+st.header("≡ƒî▒ Main Features")
 
 
 c1, c2, c3 = st.columns(3)
 
 with c1:
     with st.container(border=True):
-        st.subheader("🌱 Crop Recommendation")
+        st.subheader("≡ƒî▒ Crop Recommendation")
         st.write(
             "Get a machine-learning-based crop recommendation "
             "using soil, weather and location information."
         )
-        st.info("Main AI feature — Day 2")
+        st.info("Main AI feature ΓÇö Day 2")
 
 
 with c2:
     with st.container(border=True):
-        st.subheader("📍 Tehsil Analysis")
+        st.subheader("≡ƒôì Tehsil Analysis")
         st.write(
             "Explore crop information and representative "
             "recommendations for different regions."
@@ -143,7 +143,7 @@ with c2:
 
 with c3:
     with st.container(border=True):
-        st.subheader("📊 Model Performance")
+        st.subheader("≡ƒôè Model Performance")
         st.write(
             "View the verified evaluation metrics and "
             "understand the current ML model."
@@ -159,7 +159,7 @@ c4, c5, c6 = st.columns(3)
 
 with c4:
     with st.container(border=True):
-        st.subheader("🌦️ Weather")
+        st.subheader("≡ƒîª∩╕Å Weather")
         st.write(
             "Weather information will support irrigation, "
             "spraying and farm planning."
@@ -169,7 +169,7 @@ with c4:
 
 with c5:
     with st.container(border=True):
-        st.subheader("💰 Mandi Prices")
+        st.subheader("≡ƒÆ░ Mandi Prices")
         st.write(
             "Market information can help farmers compare "
             "crop prices and selling opportunities."
@@ -179,7 +179,7 @@ with c5:
 
 with c6:
     with st.container(border=True):
-        st.subheader("👨‍🌾🌾 My Farm")
+        st.subheader("≡ƒæ¿ΓÇì≡ƒî╛ My Farm")
         st.write(
             "Future versions can store farm details, "
             "crop history and recommendations."
@@ -193,7 +193,7 @@ with c6:
 
 st.divider()
 
-st.header("✅ Current ML Baseline")
+st.header("Γ£à Current ML Baseline")
 
 with st.container(border=True):
 
@@ -234,12 +234,12 @@ with st.container(border=True):
 # DEVELOPMENT STATUS
 # ==========================================================
 
-st.header("🚀 Development Status")
+st.header("≡ƒÜÇ Development Status")
 
 with st.container(border=True):
 
     st.subheader(
-        "Day 1 — Foundation Complete ✅"
+        "Day 1 ΓÇö Foundation Complete Γ£à"
     )
 
     st.write(
@@ -261,10 +261,8 @@ with st.container(border=True):
 st.divider()
 
 st.caption(
-    "🌾 Smart Kisan provides data-driven agricultural guidance. "
+    "≡ƒî╛ Smart Kisan provides data-driven agricultural guidance. "
     "Recommendations are not guarantees of crop yield or profit. "
     "Farmers should consider local conditions and qualified "
     "agricultural advice before making planting decisions."
 )
-
-

@@ -1,4 +1,4 @@
-﻿import json
+import json
 import pandas as pd
 import joblib
 import streamlit as st
@@ -138,8 +138,8 @@ st.caption(
 
 tab1, tab2, tab3, tab4 = st.tabs([
     "📈 Per-Crop F1",
-    "🔍 Confusion Matrix",
-    "🌱 Feature Importance",
+    "🔥 Confusion Matrix",
+    "🌟 Feature Importance",
     "📋 Full Report",
 ])
 
@@ -182,7 +182,7 @@ with tab1:
     fig.patch.set_facecolor("#f7faf7")
 
     legend_patches = [
-        mpatches.Patch(color="#22c55e", label="High (ΓëÑ0.70)"),
+        mpatches.Patch(color="#22c55e", label="High (≥0.70)"),
         mpatches.Patch(color="#f59e0b", label="Moderate (0.50–0.70)"),
         mpatches.Patch(color="#ef4444", label="Low (<0.50)"),
     ]
@@ -394,5 +394,4 @@ st.caption(
     "Random Forest Classifier (balanced) | "
     f"Test accuracy: {metrics['test_accuracy']*100:.2f}% | "
     f"Macro F1: {metrics['macro_f1']:.3f}"
-)
-
+)git add . ; git commit -m "feat: model performance - 4 tabs, F1 bars, feature importance, misclassifications" ; git push

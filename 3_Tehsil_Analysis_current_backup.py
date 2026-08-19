@@ -1,4 +1,4 @@
-﻿import streamlit as st
+import streamlit as st
 import pandas as pd
 import joblib
 
@@ -8,7 +8,7 @@ import joblib
 
 st.set_page_config(
     page_title="Tehsil-wise Crop Analysis - Smart Kisan",
-    page_icon="≡ƒôì",
+    page_icon="📍",
     layout="wide",
 )
 
@@ -61,11 +61,11 @@ overall_averages = overall_numeric.mean(skipna=True)
 # ==========================================================
 
 CROP_EMOJI = {
-    "Rice": "≡ƒî╛", "Wheat": "≡ƒî┐", "Maize": "≡ƒî╜",
-    "Cotton": "≡ƒî╕", "Mustard": "≡ƒî╗", "Pulses": "≡ƒ½ÿ",
-    "Vegetables": "≡ƒÑª", "Apple": "≡ƒìÄ", "Walnut": "≡ƒî░",
-    "Sugarcane": "≡ƒÄï", "Potato": "≡ƒÑö", "Barley": "≡ƒî╛",
-    "Coconut": "≡ƒÑÑ", "Rajma": "≡ƒ½ÿ", "Basmati Rice": "≡ƒî╛",
+    "Rice": "🌾", "Wheat": "🌿", "Maize": "🌽",
+    "Cotton": "🌸", "Mustard": "🌻", "Pulses": "🫘",
+    "Vegetables": "🥦", "Apple": "🍎", "Walnut": "🌰",
+    "Sugarcane": "🎋", "Potato": "🥔", "Barley": "🌾",
+    "Coconut": "🥥", "Rajma": "🫘", "Basmati Rice": "🌾",
 }
 
 CROP_COLOR = {
@@ -76,7 +76,7 @@ CROP_COLOR = {
 }
 
 def crop_emoji(crop):
-    return CROP_EMOJI.get(crop, "≡ƒî▒")
+    return CROP_EMOJI.get(crop, "🌱")
 
 def crop_color(crop):
     return CROP_COLOR.get(crop, "#607D8B")
@@ -85,7 +85,7 @@ def crop_color(crop):
 # HEADER
 # ==========================================================
 
-st.title("≡ƒôì Tehsil-wise Crop Analysis")
+st.title("📍 Tehsil-wise Crop Analysis")
 st.write(
     "Select a state, district, and tehsil to view "
     "observed crop information and ML recommendations. "
@@ -96,10 +96,10 @@ st.write(
 # TABS
 # ==========================================================
 
-tab1, tab2 = st.tabs(["≡ƒöì Tehsil Lookup", "≡ƒù║∩╕Å State Map"])
+tab1, tab2 = st.tabs(["🔍 Tehsil Lookup", "🗺️ State Map"])
 
 # ==========================================================
-# TAB 1 ΓÇö TEHSIL LOOKUP
+# TAB 1 — TEHSIL LOOKUP
 # ==========================================================
 
 with tab1:
@@ -124,7 +124,7 @@ with tab1:
 
     st.divider()
 
-    if st.button("≡ƒôì Generate Tehsil Recommendation", use_container_width=True, type="primary"):
+    if st.button("📍 Generate Tehsil Recommendation", use_container_width=True, type="primary"):
 
         tehsil_df = district_df[
             district_df["Tehsil_Name"].astype(str) == selected_tehsil
@@ -138,7 +138,7 @@ with tab1:
         # OBSERVED CROPS
         # --------------------------------------------------
 
-        st.subheader("≡ƒî╛ Observed Crop Information")
+        st.subheader("🌾 Observed Crop Information")
 
         tehsil_df["ha"] = pd.to_numeric(tehsil_df["ha"], errors="coerce")
         observed = (
@@ -203,7 +203,7 @@ with tab1:
             top3          = [(model.classes_[i], float(probabilities[i]*100)) for i in top3_idx]
             confidence    = top3[0][1]
             reliability   = "High" if confidence >= 70 else "Moderate" if confidence >= 50 else "Low"
-            rel_icon      = "≡ƒƒó" if reliability == "High" else "≡ƒƒí" if reliability == "Moderate" else "≡ƒö┤"
+            rel_icon      = "🟢" if reliability == "High" else "🟡" if reliability == "Moderate" else "🔴"
 
             # Location summary
             st.divider()
@@ -213,14 +213,14 @@ with tab1:
             c3.metric("Tehsil",   selected_tehsil)
 
             # Main result
-            st.subheader("≡ƒñû ML Recommendation")
+            st.subheader("🤖 ML Recommendation")
 
             if confidence >= 70:
-                st.success(f"≡ƒƒó Recommended: **{crop_emoji(prediction)} {prediction}** ΓÇö High confidence")
+                st.success(f"🟢 Recommended: **{crop_emoji(prediction)} {prediction}** — High confidence")
             elif confidence >= 50:
-                st.warning(f"≡ƒƒí Recommended: **{crop_emoji(prediction)} {prediction}** ΓÇö Moderate confidence")
+                st.warning(f"🟡 Recommended: **{crop_emoji(prediction)} {prediction}** — Moderate confidence")
             else:
-                st.error(f"≡ƒö┤ Recommended: **{crop_emoji(prediction)} {prediction}** ΓÇö Low confidence")
+                st.error(f"🔴 Recommended: **{crop_emoji(prediction)} {prediction}** — Low confidence")
 
             m1, m2, m3 = st.columns(3)
             m1.metric("Prediction Confidence", f"{confidence:.2f}%")
@@ -229,8 +229,8 @@ with tab1:
 
             # Top 3
             st.divider()
-            st.subheader("≡ƒÅå Top 3 Recommendations")
-            medals = ["≡ƒÑç", "≡ƒÑê", "≡ƒÑë"]
+            st.subheader("🏆 Top 3 Recommendations")
+            medals = ["🥇", "🥈", "🥉"]
             r1, r2, r3 = st.columns(3)
             for pos, (crop, conf) in enumerate(top3):
                 with [r1, r2, r3][pos]:
@@ -241,7 +241,7 @@ with tab1:
 
             # Conditions
             st.divider()
-            st.subheader("≡ƒî▒ Representative Conditions")
+            st.subheader("🌱 Representative Conditions")
             cond1, cond2 = st.columns(2)
             with cond1:
                 st.markdown(f"**Soil Type:** {representative_soil}")
@@ -251,19 +251,19 @@ with tab1:
                 st.markdown(f"**Potassium:** {averages['Potassium_Value (K)']:.2f}")
             with cond2:
                 st.markdown(f"**Rainfall:** {averages['Rainfall_cm']:.2f} cm")
-                st.markdown(f"**Temperature:** {averages['temperature_celsius']:.2f} ┬░C")
+                st.markdown(f"**Temperature:** {averages['temperature_celsius']:.2f} °C")
                 st.markdown(f"**Humidity:** {averages['humidity_percentage']:.2f}%")
                 st.markdown(f"**Agro Zone:** {representative_zone}")
 
             # Dataset vs Model
             st.divider()
-            st.subheader("≡ƒöÄ Dataset Evidence vs Model")
+            st.subheader("🔎 Dataset Evidence vs Model")
             if not observed.empty:
                 obs_crop = observed.index[0]
                 if obs_crop == prediction:
-                    st.success(f"Γ£à ML recommendation (**{prediction}**) matches the major recorded crop.")
+                    st.success(f"✅ ML recommendation (**{prediction}**) matches the major recorded crop.")
                 else:
-                    st.warning(f"ΓÜá∩╕Å ML recommendation (**{prediction}**) differs from recorded crop (**{obs_crop}**).")
+                    st.warning(f"⚠️ ML recommendation (**{prediction}**) differs from recorded crop (**{obs_crop}**).")
 
             st.info(
                 "Recommendation based on available dataset and representative "
@@ -277,18 +277,18 @@ with tab1:
             st.exception(error)
 
 # ==========================================================
-# TAB 2 ΓÇö STATE MAP
+# TAB 2 — STATE MAP
 # ==========================================================
 
 with tab2:
 
-    st.subheader("≡ƒù║∩╕Å Crop Recommendation Map")
+    st.subheader("🗺️ Crop Recommendation Map")
     st.write("Select a state to see ML crop recommendations for all its tehsils on an interactive map.")
 
     map_states = sorted(df["State_Name"].dropna().astype(str).unique())
     map_state  = st.selectbox("Select State for Map", map_states, key="map_state")
 
-    if st.button("≡ƒù║∩╕Å Generate State Map", use_container_width=True, type="primary"):
+    if st.button("🗺️ Generate State Map", use_container_width=True, type="primary"):
 
         try:
             import folium
@@ -310,7 +310,7 @@ with tab2:
             if not has_coords:
                 st.warning("No GPS coordinates in dataset. Showing summary table instead.")
 
-                # Fallback ΓÇö show table
+                # Fallback — show table
                 results = []
                 for tehsil in map_df["Tehsil_Name"].dropna().unique()[:50]:
                     t_df = map_df[map_df["Tehsil_Name"].astype(str) == tehsil]
@@ -357,16 +357,16 @@ with tab2:
                     sm3.metric("Avg Confidence",   f"{res_df['Confidence (%)'].mean():.1f}%")
 
                     # Crop distribution
-                    st.markdown("### ≡ƒî╛ Crop Distribution")
+                    st.markdown("### 🌾 Crop Distribution")
                     st.bar_chart(res_df["Recommended Crop"].value_counts())
 
                     # Full table
-                    st.markdown("### ≡ƒôï Tehsil-wise Recommendations")
+                    st.markdown("### 📋 Tehsil-wise Recommendations")
                     st.dataframe(res_df, use_container_width=True, hide_index=True)
 
                     # Download
                     st.download_button(
-                        "≡ƒôÑ Download as CSV",
+                        "📥 Download as CSV",
                         res_df.to_csv(index=False),
                         file_name=f"{map_state}_tehsil_recommendations.csv",
                         mime="text/csv",
@@ -374,7 +374,7 @@ with tab2:
                     )
 
             else:
-                # Has coordinates ΓÇö show Folium map
+                # Has coordinates — show Folium map
                 results = []
                 for tehsil in map_df["Tehsil_Name"].dropna().unique():
                     t_df = map_df[map_df["Tehsil_Name"].astype(str) == tehsil]
@@ -441,12 +441,12 @@ with tab2:
 
                     st_folium(m, width=1200, height=600)
 
-                    st.markdown("### ≡ƒôï Tehsil Recommendations")
+                    st.markdown("### 📋 Tehsil Recommendations")
                     display_df = res_df.rename(columns={"tehsil":"Tehsil","crop":"Recommended Crop","confidence":"Confidence (%)"}).drop(columns=["lat","lon"])
                     st.dataframe(display_df.sort_values("Confidence (%)", ascending=False), use_container_width=True, hide_index=True)
 
                     st.download_button(
-                        "≡ƒôÑ Download as CSV",
+                        "📥 Download as CSV",
                         display_df.to_csv(index=False),
                         file_name=f"{map_state}_map_recommendations.csv",
                         mime="text/csv",
@@ -465,4 +465,4 @@ with tab2:
 # ==========================================================
 
 st.divider()
-st.caption("≡ƒôì Smart Kisan Tehsil Analysis | Random Forest Classifier | 93.53% test accuracy")
+st.caption("📍 Smart Kisan Tehsil Analysis | Random Forest Classifier | 93.53% test accuracy")

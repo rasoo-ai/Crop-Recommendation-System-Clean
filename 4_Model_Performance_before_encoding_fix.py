@@ -19,7 +19,7 @@ from sklearn.model_selection import train_test_split
 
 st.set_page_config(
     page_title="Model Performance - Smart Kisan",
-    page_icon="📊",
+    page_icon="≡ƒôè",
     layout="wide",
 )
 
@@ -31,7 +31,7 @@ footer { visibility: hidden; }
 </style>
 """, unsafe_allow_html=True)
 
-st.title("📊 Model Performance")
+st.title("≡ƒôè Model Performance")
 st.write("Evaluation metrics for the Smart Kisan Random Forest classifier on held-out test data.")
 
 # ==========================================================
@@ -137,14 +137,14 @@ st.caption(
 # ==========================================================
 
 tab1, tab2, tab3, tab4 = st.tabs([
-    "📈 Per-Crop F1",
-    "🔍 Confusion Matrix",
-    "🌱 Feature Importance",
-    "📋 Full Report",
+    "≡ƒôê Per-Crop F1",
+    "≡ƒöÑ Confusion Matrix",
+    "≡ƒîƒ Feature Importance",
+    "≡ƒôï Full Report",
 ])
 
 # ----------------------------------------------------------
-# TAB 1 — PER CROP F1
+# TAB 1 ΓÇö PER CROP F1
 # ----------------------------------------------------------
 
 with tab1:
@@ -183,7 +183,7 @@ with tab1:
 
     legend_patches = [
         mpatches.Patch(color="#22c55e", label="High (ΓëÑ0.70)"),
-        mpatches.Patch(color="#f59e0b", label="Moderate (0.50–0.70)"),
+        mpatches.Patch(color="#f59e0b", label="Moderate (0.50ΓÇô0.70)"),
         mpatches.Patch(color="#ef4444", label="Low (<0.50)"),
     ]
     ax.legend(handles=legend_patches, loc="lower right", fontsize=9)
@@ -201,12 +201,12 @@ with tab1:
         st.success(f"Strong performers: **{', '.join(high)}**")
     if low:
         st.warning(
-            f"Weak performers: **{', '.join(low)}** — "
+            f"Weak performers: **{', '.join(low)}** ΓÇö "
             f"too few training samples. Collecting more data for these crops will improve F1."
         )
 
 # ----------------------------------------------------------
-# TAB 2 — CONFUSION MATRIX
+# TAB 2 ΓÇö CONFUSION MATRIX
 # ----------------------------------------------------------
 
 with tab2:
@@ -255,7 +255,7 @@ with tab2:
         st.dataframe(miss_df, use_container_width=True, hide_index=True)
 
 # ----------------------------------------------------------
-# TAB 3 — FEATURE IMPORTANCE
+# TAB 3 ΓÇö FEATURE IMPORTANCE
 # ----------------------------------------------------------
 
 with tab3:
@@ -344,7 +344,7 @@ with tab3:
         st.error(f"Could not compute feature importance: {e}")
 
 # ----------------------------------------------------------
-# TAB 4 — FULL REPORT
+# TAB 4 ΓÇö FULL REPORT
 # ----------------------------------------------------------
 
 with tab4:
@@ -380,7 +380,7 @@ with tab4:
 
     st.info(
         "Accuracy is calculated on a held-out 20% test split. "
-        "Macro F1 treats all classes equally — useful for imbalanced datasets. "
+        "Macro F1 treats all classes equally ΓÇö useful for imbalanced datasets. "
         "Weighted F1 weights by class support."
     )
 
@@ -390,9 +390,8 @@ with tab4:
 
 st.divider()
 st.caption(
-    "📊 Smart Kisan Model Performance | "
+    "≡ƒôè Smart Kisan Model Performance | "
     "Random Forest Classifier (balanced) | "
     f"Test accuracy: {metrics['test_accuracy']*100:.2f}% | "
     f"Macro F1: {metrics['macro_f1']:.3f}"
 )
-
