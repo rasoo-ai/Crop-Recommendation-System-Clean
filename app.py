@@ -1,4 +1,5 @@
 ﻿import streamlit as st
+import requests
 
 st.set_page_config(
     page_title="Smart Kisan",
@@ -29,8 +30,7 @@ footer { visibility: hidden; }
 .hero-badge {
     display: inline-block; background: rgba(255,255,255,0.2);
     border: 1px solid rgba(255,255,255,0.3); border-radius: 30px;
-    padding: 0.4rem 1.2rem; font-size: 0.85rem; font-weight: 500;
-    margin-right: 0.5rem;
+    padding: 0.4rem 1.2rem; font-size: 0.85rem; font-weight: 500; margin-right: 0.5rem;
 }
 .stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; }
 .stat-card {
@@ -59,10 +59,19 @@ footer { visibility: hidden; }
 .progress-bar-bg { flex: 1; background: #e8f5e2; border-radius: 8px; height: 10px; overflow: hidden; }
 .progress-bar-fill { height: 100%; border-radius: 8px; }
 .progress-value { font-weight: 700; color: #1a5c2a; font-size: 0.9rem; min-width: 50px; text-align: right; }
+.weather-card {
+    background: linear-gradient(135deg, #0ea5e9, #0284c7);
+    border-radius: 16px; padding: 1.5rem; color: white;
+    box-shadow: 0 4px 20px rgba(14,165,233,0.3); margin-bottom: 1rem;
+}
 [data-testid="stSidebar"] { background: linear-gradient(180deg, #1a5c2a 0%, #2d8a45 100%); }
 [data-testid="stSidebar"] * { color: white !important; }
 </style>
 """, unsafe_allow_html=True)
+
+# ==========================================================
+# SIDEBAR
+# ==========================================================
 
 with st.sidebar:
     st.markdown("## 🌾 Smart Kisan")
@@ -80,6 +89,10 @@ with st.sidebar:
     st.markdown("📋 Test Records: **1,129**")
     st.markdown("🎯 Macro F1: **0.682**")
 
+# ==========================================================
+# HERO
+# ==========================================================
+
 st.markdown("""
 <div class="hero-banner">
     <div class="hero-title">🌾 Smart Kisan</div>
@@ -91,6 +104,10 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
+# ==========================================================
+# STATS
+# ==========================================================
+
 st.markdown("""
 <div class="stat-row">
     <div class="stat-card"><div class="stat-number">93.53%</div><div class="stat-label">Test Accuracy</div></div>
@@ -99,6 +116,63 @@ st.markdown("""
     <div class="stat-card"><div class="stat-number">0.682</div><div class="stat-label">Macro F1 Score</div></div>
 </div>
 """, unsafe_allow_html=True)
+
+# ==========================================================
+# LIVE WEATHER
+# ==========================================================
+
+st.markdown("### 🌦️ Live Weather for Farming")
+st.caption("Check current conditions before planting, spraying or irrigating.")
+
+WEATHER_API_KEY = "5454c305471a447ae8f570f68e62480c" # get free from openweathermap.org
+
+col_city, col_btn = st.columns([4, 1])
+with col_city:
+    city = st.text_input("City", value="Hyderabad", label_visibility="collapsed", placeholder="Enter your city...")
+with col_btn:
+    check_weather = st.button("🌤️ Check Weather", use_container_width=True)
+
+if check_weather and city:
+    try:
+        url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={WEATHER_API_KEY}&units=metric"
+        r = requests.get(url, timeout=5).json()
+
+        if r.get("cod") == 200:
+            temp     = r["main"]["temp"]
+            feels    = r["main"]["feels_like"]
+            humidity = r["main"]["humidity"]
+            wind     = r["wind"]["speed"]
+            desc     = r["weather"][0]["description"].title()
+            rain     = r.get("rain", {}).get("1h", 0)
+
+            w1, w2, w3, w4, w5 = st.columns(5)
+            w1.metric("🌡️ Temperature",  f"{temp}°C",   f"Feels {feels}°C")
+            w2.metric("💧 Humidity",     f"{humidity}%")
+            w3.metric("🌧️ Rainfall",     f"{rain} mm/hr")
+            w4.metric("💨 Wind Speed",   f"{wind} m/s")
+            w5.metric("☁️ Condition",    desc)
+
+            # Smart farming advice
+            if rain > 5:
+                st.warning("🌧️ Heavy rainfall — avoid spraying pesticides or fertilizers today.")
+            elif temp > 38:
+                st.warning("🔥 Very high temperature — irrigate crops early morning or evening only.")
+            elif humidity > 85:
+                st.warning("💦 High humidity — watch for fungal diseases in crops.")
+            elif wind > 10:
+                st.warning("💨 High wind speed — avoid aerial spraying today.")
+            else:
+                st.success(f"✅ Good farming conditions in **{city}** today!")
+        else:
+            st.error("City not found. Try: Hyderabad, Delhi, Mumbai, Pune, Chennai")
+    except Exception:
+        st.error("Could not fetch weather. Check your internet connection.")
+
+st.markdown("---")
+
+# ==========================================================
+# FEATURES
+# ==========================================================
 
 st.markdown("### 🌱 Platform Features")
 c1, c2, c3 = st.columns(3)
@@ -115,11 +189,15 @@ with c3:
 st.markdown("<br>", unsafe_allow_html=True)
 c4, c5, c6 = st.columns(3)
 with c4:
-    st.markdown("""<div class="feature-card"><div class="feature-icon">🌦️</div><div class="feature-title">Weather Intelligence</div><div class="feature-desc">Live weather data for irrigation planning and seasonal farming decisions.</div><span class="feature-tag-soon">🔜 Coming Soon</span></div>""", unsafe_allow_html=True)
+    st.markdown("""<div class="feature-card"><div class="feature-icon">🌦️</div><div class="feature-title">Weather Intelligence</div><div class="feature-desc">Live weather data for irrigation planning and seasonal farming decisions.</div><span class="feature-tag">✅ Live</span></div>""", unsafe_allow_html=True)
 with c5:
     st.markdown("""<div class="feature-card"><div class="feature-icon">💰</div><div class="feature-title">Mandi Prices</div><div class="feature-desc">Real-time market prices to help farmers compare crops and identify best selling opportunities.</div><span class="feature-tag-soon">🔜 Coming Soon</span></div>""", unsafe_allow_html=True)
 with c6:
     st.markdown("""<div class="feature-card"><div class="feature-icon">👨‍🌾</div><div class="feature-title">My Farm</div><div class="feature-desc">Store your farm profile, crop history, soil records and personalised recommendations.</div><span class="feature-tag-soon">🔜 Coming Soon</span></div>""", unsafe_allow_html=True)
+
+# ==========================================================
+# MODEL SNAPSHOT
+# ==========================================================
 
 st.markdown("<br>", unsafe_allow_html=True)
 st.markdown("### 🤖 Model Performance Snapshot")
@@ -147,6 +225,10 @@ with col_right:
 | 💧 Humidity | Disease risk |
 """)
     st.info("🔑 **Top insight:** Temperature, Rainfall and Nitrogen account for over 40% of the model's decision-making power.")
+
+# ==========================================================
+# HOW IT WORKS
+# ==========================================================
 
 st.markdown("<br>", unsafe_allow_html=True)
 st.markdown("### ⚙️ How It Works")
